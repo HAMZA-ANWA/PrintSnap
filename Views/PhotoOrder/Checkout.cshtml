@@ -1,0 +1,100 @@
+﻿@model DigitalPhotoPrintingSystem.Models.CheckoutViewModel
+
+@{
+    ViewData["Title"] = "Checkout & Payment";
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Shipping & Payment Details</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="ProcessCheckout" asp-controller="PhotoOrder" method="post">
+
+                        <!-- Total Amount Display -->
+                        <div class="alert alert-info d-flex justify-content-between align-items-center">
+                            <span><strong>Total Order Amount:</strong></span>
+                            <h4 class="mb-0 text-success">PKR @Model.TotalAmount.ToString("N2")</h4>
+                        </div>
+
+                        <!-- Customer Details -->
+                        <h5 class="mt-4 border-bottom pb-2">1. Shipping Information</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Full Name</label>
+                            <input asp-for="FullName" class="form-control" placeholder="John Doe" />
+                            <span asp-validation-for="FullName" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email Address (Max 25 chars)</label>
+                                <input asp-for="Email" class="form-control" placeholder="user@domain.com" />
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Phone Number</label>
+                                <input asp-for="Phone" class="form-control" placeholder="+92 300 1234567" />
+                                <span asp-validation-for="Phone" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Shipping Address</label>
+                            <textarea asp-for="Address" class="form-control" rows="2" placeholder="Street Address, City"></textarea>
+                            <span asp-validation-for="Address" class="text-danger"></span>
+                        </div>
+
+                        <!-- Payment Method Options -->
+                        <h5 class="mt-4 border-bottom pb-2">2. Payment Method</h5>
+                        <div class="mb-3">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="Direct" id="payDirect" checked onclick="toggleCreditCard(false)">
+                                <label class="form-check-label" for="payDirect">Pay at Nearest Branch</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="CreditCard" id="payCard" onclick="toggleCreditCard(true)">
+                                <label class="form-check-label" for="payCard">Credit Card</label>
+                            </div>
+                        </div>
+
+                        <!-- Credit Card Input Fields -->
+                        <div id="creditCardSection" class="p-3 border rounded bg-light mb-3" style="display: none;">
+                            <h6 class="text-secondary"><i class="bi bi-shield-lock"></i> Encrypted Credit Card Details</h6>
+                            <div class="mb-3">
+                                <label class="form-label">Card Number</label>
+                                <input asp-for="CardNumber" class="form-control" placeholder="1234 5678 9012 3456" />
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Expiry Date</label>
+                                    <input asp-for="ExpiryDate" class="form-control" placeholder="MM/YY" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">CVV</label>
+                                    <input asp-for="CVV" type="password" class="form-control" placeholder="123" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <input type="hidden" asp-for="TotalAmount" />
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-success btn-lg">Place Purchase Order</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleCreditCard(show) {
+            document.getElementById('creditCardSection').style.display = show ? 'block' : 'none';
+        }
+    </script>
+}

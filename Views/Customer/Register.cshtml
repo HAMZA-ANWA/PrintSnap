@@ -1,0 +1,58 @@
+﻿@model DigitalPhotoPrintingSystem.Models.Customer
+
+@{
+    ViewData["Title"] = "Customer Registration";
+}
+
+<h2>Customer Registration</h2>
+
+<form method="post">
+
+    <p>
+        First Name:
+        <input type="text" name="FirstName" />
+    </p>
+
+    <p>
+        Last Name:
+        <input type="text" name="LastName" />
+    </p>
+
+    <p>
+        Date of Birth:
+        <input type="date" name="DOB" />
+    </p>
+
+    <p>
+        Gender:
+        <select name="Gender">
+            <option>Male</option>
+            <option>Female</option>
+        </select>
+    </p>
+
+    <p>
+        Phone:
+        <input type="text" name="Phone" />
+    </p>
+
+    <p>
+        Address:
+        <input type="text" name="Address" />
+    </p>
+
+    <p>
+        Email:
+        <input type="email" name="Email" />
+    </p>
+
+    <p>
+        Password:
+        <input type="password" name="Password" />
+    </p>
+
+    <button type="submit">
+        Register
+    </button>
+
+</form>

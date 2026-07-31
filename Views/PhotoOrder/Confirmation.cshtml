@@ -1,0 +1,49 @@
+﻿@model DigitalPhotoPrintingSystem.Models.PhotoOrder
+
+@{
+    ViewData["Title"] = "Order Receipt";
+}
+
+<div class="container mt-5">
+    <div class="card shadow-lg p-4 mx-auto" style="max-width: 600px;">
+        <div class="text-center text-success mb-3">
+            <h2 class="fw-bold">🎉 Order Placed Successfully!</h2>
+            <p class="text-muted">Thank you for your order. Here are your details:</p>
+        </div>
+        <hr />
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <strong>Order ID:</strong> #@Model.Id
+            </div>
+            <div class="col-md-6 mb-3">
+                <strong>Customer Name:</strong> @Model.CustomerName
+            </div>
+            <div class="col-md-6 mb-3">
+                <strong>Print Size:</strong> @Model.PrintSize
+            </div>
+            <div class="col-md-6 mb-3">
+                <strong>Quantity:</strong> @Model.Quantity
+            </div>
+            <div class="col-md-6 mb-3">
+                <strong>Unit Price:</strong> Rs. @Model.UnitPrice
+            </div>
+            <div class="col-md-6 mb-3 text-primary">
+                <h4><strong>Total Paid:</strong> Rs. @Model.TotalPrice</h4>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.PhotoPath))
+        {
+            <div class="text-center mt-3 mb-3">
+                <h5>Uploaded Image Preview:</h5>
+                <img src="@Model.PhotoPath" class="img-thumbnail mt-2" style="max-height: 200px; object-fit: contain;" alt="Uploaded Photo" />
+            </div>
+        }
+
+        <hr />
+        <div class="text-center mt-2">
+            <a asp-action="Create" class="btn btn-outline-primary">Place Another Order</a>
+        </div>
+    </div>
+</div>

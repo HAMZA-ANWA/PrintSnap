@@ -1,0 +1,63 @@
+﻿@model IEnumerable<DigitalPhotoPrintingSystem.Models.PurchaseOrder>
+
+@{
+    ViewData["Title"] = "Manage Purchase Orders";
+}
+
+<div class="max-w-7xl mx-auto px-4 py-10">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-900">Manage Orders</h2>
+            <p class="text-slate-500 text-sm">Requirement 9 & 10: Admin fulfillment & automated photo directory removal.</p>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl flex items-center">
+            <i class="fa-solid fa-circle-check mr-3 text-lg"></i> @TempData["Success"]
+        </div>
+    }
+
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <table class="w-full text-left border-collapse">
+            <thead class="bg-slate-900 text-white text-xs uppercase tracking-wider font-semibold">
+                <tr>
+                    <th class="p-4">Order ID</th>
+                    <th class="p-4">Customer Email</th>
+                    <th class="p-4">Server Directory</th>
+                    <th class="p-4">Payment</th>
+                    <th class="p-4">Total Price</th>
+                    <th class="p-4 text-center">Fulfillment Action</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-sm">
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-4 font-bold text-indigo-600">#@item.Id</td>
+                            <td class="p-4 font-medium text-slate-800">@item.CustomerEmail</td>
+                            <td class="p-4"><span class="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-md font-mono text-xs border border-slate-200">folder_@item.Id.ToString("D4")</span></td>
+                            <td class="p-4 text-slate-600">@item.PaymentMode</td>
+                            <td class="p-4 font-semibold text-emerald-600">$@item.TotalAmount</td>
+                            <td class="p-4 text-center">
+                                <form asp-action="ExecuteOrder" asp-route-id="@item.Id" method="post" onsubmit="return confirm('Execute order and delete photograph folder from server?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="bg-rose-600 hover:bg-rose-700 text-white font-semibold px-4 py-2 rounded-xl text-xs shadow-sm transition">Execute & Delete Folder</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="p-8 text-center text-slate-400">No active purchase orders found.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

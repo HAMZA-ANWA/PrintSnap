@@ -1,0 +1,75 @@
+﻿@model IEnumerable<DigitalPhotoPrintingSystem.Models.Price>
+
+@{
+    ViewData["Title"] = "Manage Prices";
+}
+
+<div class="container my-4">
+    <h2 class="mb-4">Manage Print Sizes & Prices</h2>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm col-md-8 p-3">
+        <table class="table table-striped align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Print Size</th>
+                    <th>Current Price</th>
+                    <th class="text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var price in Model)
+                    {
+                        // خودکار پراپرٹی نکالنے کا طریقہ
+                        var priceValue = price.GetType().GetProperties()
+                            .FirstOrDefault(p => (p.PropertyType == typeof(decimal) ||
+                                                  p.PropertyType == typeof(double) ||
+                                                  p.PropertyType == typeof(float) ||
+                                                  p.PropertyType == typeof(int)) &&
+                                                  p.Name != "Id")?.GetValue(price) ?? 0;
+
+                        <tr>
+                            <td>
+                                <strong>@price.PrintSize</strong>
+                            </td>
+                            <td>
+                                <form id="priceForm_@price.Id" asp-controller="Admin" asp-action="UpdatePrice" method="post" class="d-flex align-items-center">
+                                    <input type="hidden" name="priceId" value="@price.Id" />
+                                    <input type="number" step="0.01" name="newPrice" value="@priceValue" class="form-control form-control-sm w-50" />
+                                </form>
+                            </td>
+                            <td class="text-center">
+                                <button type="submit" form="priceForm_@price.Id" class="btn btn-primary btn-sm">
+                                    Update
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="3" class="text-center text-muted">No price records found.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

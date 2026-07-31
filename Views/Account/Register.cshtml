@@ -1,0 +1,59 @@
+﻿@model DigitalPhotoPrintingSystem.Models.Customer
+
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="container mt-4" style="max-width: 600px;">
+    <h2>Customer Registration</h2>
+
+    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+    <form asp-action="Register" method="post">
+        <div class="form-group mb-3">
+            <label>First Name</label>
+            <input asp-for="F_Name" class="form-control" required />
+        </div>
+
+        <div class="form-group mb-3">
+            <label>Last Name</label>
+            <input asp-for="L_Name" class="form-control" required />
+        </div>
+
+        <div class="form-group mb-3">
+            <label>Date of Birth</label>
+            <input asp-for="Dob" type="date" class="form-control" required />
+        </div>
+
+        <div class="form-group mb-3">
+            <label>Gender</label>
+            <select asp-for="Gender" class="form-control" required>
+                <option value="">-- Select Gender --</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+        </div>
+
+        <div class="form-group mb-3">
+            <label>Phone Number</label>
+            <input asp-for="P_No" class="form-control" />
+        </div>
+
+        <div class="form-group mb-3">
+            <label>Address</label>
+            <input asp-for="Address" class="form-control" />
+        </div>
+
+        <div class="form-group mb-3">
+            <label>Email</label>
+            <input asp-for="Email" type="email" class="form-control" required />
+        </div>
+
+        <div class="form-group mb-3">
+            <label>Password</label>
+            <input asp-for="Password" type="password" class="form-control" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Register</button>
+    </form>
+</div>

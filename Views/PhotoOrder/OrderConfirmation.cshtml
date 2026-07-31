@@ -1,0 +1,31 @@
+﻿@model DigitalPhotoPrintingSystem.Models.PurchaseOrder
+
+@{
+    ViewData["Title"] = "Order Confirmation";
+}
+
+<div class="container py-5">
+    <div class="card shadow border-0 text-center mx-auto" style="max-width: 600px;">
+        <div class="card-body p-5">
+            <div class="mb-4 text-success">
+                <h1 class="mt-3">Order Placed Successfully!</h1>
+            </div>
+
+            <p class="fs-5 text-muted">Thank you for your order. We have received your photos for printing.</p>
+
+            <div class="bg-light p-4 rounded text-start my-4">
+                <p class="mb-2"><strong>Purchase Order Number:</strong> <span class="badge bg-primary fs-6">#@Model.Id</span></p>
+                <p class="mb-2"><strong>Server Folder Name:</strong> <code>folder_@Model.Id.ToString("D4")</code></p>
+                <p class="mb-2"><strong>Customer Email:</strong> @Model.CustomerEmail</p>
+                <p class="mb-2"><strong>Shipping Address:</strong> @Model.ShippingAddress</p>
+                <p class="mb-0"><strong>Payment Method:</strong> @Model.PaymentMode</p>
+            </div>
+
+            <div class="alert alert-info" role="alert">
+                A purchase order request has been created in the database and assigned to our admin team for printing.
+            </div>
+
+            <a href="/" class="btn btn-primary btn-lg mt-3">Back to Home</a>
+        </div>
+    </div>
+</div>

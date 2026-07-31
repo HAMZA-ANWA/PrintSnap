@@ -1,0 +1,54 @@
+﻿@model IEnumerable<DigitalPhotoPrintingSystem.Models.PurchaseOrder>
+
+@{
+    ViewData["Title"] = "Manage Purchase Orders";
+}
+
+<div class="container py-4">
+    <h2>Manage Orders (Admin View)</h2>
+    <hr />
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    <table class="table table-bordered table-hover mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th>Order #</th>
+                <th>Customer Email</th>
+                <th>Folder Name</th>
+                <th>Payment Mode</th>
+                <th>Total Amount</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>#@item.Id</td>
+                        <td>@item.CustomerEmail</td>
+                        <td><code>@item.FolderName</code></td>
+                        <td>@item.PaymentMode</td>
+                        <td>$@item.TotalAmount</td>
+                        <td>
+                            <form asp-action="ExecuteOrder" asp-route-id="@item.Id" method="post" onsubmit="return confirm('Execute order and permanently delete photo folder from server?');">
+                                <button type="submit" class="btn btn-sm btn-danger">Execute & Delete Folder</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="6" class="text-center">No orders found.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
