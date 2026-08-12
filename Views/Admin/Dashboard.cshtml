@@ -1,7 +1,96 @@
-﻿@{
+﻿@model IEnumerable<DigitalPhotoPrintingSystem.Models.PhotoOrder>
+
+@{
     ViewData["Title"] = "Admin Dashboard";
 }
 
-<h2>Admin Dashboard</h2>
+<div class="bg-slate-900 text-white py-10 px-4">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-extrabold">Admin Dashboard</h1>
+        <p class="text-slate-400 mt-1">Overview of all orders, revenue and customers.</p>
+    </div>
+</div>
 
-<p>Welcome Admin</p>
+<div class="max-w-6xl mx-auto px-4 py-8">
+    @if (TempData["Error"] != null)
+    {
+        <div class="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl">
+            @TempData["Error"]
+        </div>
+    }
+
+    <!-- Stats Cards -->
+    <div class="grid md:grid-cols-3 gap-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center text-xl mb-4">
+                <i class="fa-solid fa-cart-shopping"></i>
+            </div>
+            <p class="text-sm text-slate-500 font-semibold">Total Orders</p>
+            <p class="text-3xl font-extrabold text-slate-900">@(ViewBag.TotalOrders ?? 0)</p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-xl mb-4">
+                <i class="fa-solid fa-dollar-sign"></i>
+            </div>
+            <p class="text-sm text-slate-500 font-semibold">Total Revenue</p>
+            <p class="text-3xl font-extrabold text-slate-900">$@((ViewBag.TotalRevenue ?? 0m).ToString("N2"))</p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center text-xl mb-4">
+                <i class="fa-solid fa-users"></i>
+            </div>
+            <p class="text-sm text-slate-500 font-semibold">Total Customers</p>
+            <p class="text-3xl font-extrabold text-slate-900">@(ViewBag.TotalCustomers ?? 0)</p>
+        </div>
+    </div>
+
+    <!-- Recent Orders Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 mt-8 overflow-hidden">
+        <div class="flex justify-between items-center p-6 border-b border-slate-100">
+            <h2 class="text-lg font-bold text-slate-900">Recent Orders</h2>
+            <a href="/Admin/ManageOrders" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800">Manage All &rarr;</a>
+        </div>
+
+        <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-slate-500 uppercase tracking-wider text-xs font-semibold">
+                <tr>
+                    <th class="p-4">Order ID</th>
+                    <th class="p-4">Customer Email</th>
+                    <th class="p-4">Payment</th>
+                    <th class="p-4">Total</th>
+                    <th class="p-4">Date</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-4 font-bold text-indigo-600">#@item.Id</td>
+
+                            <td class="p-4 text-slate-600">
+                                @(!string.IsNullOrEmpty(item.EmailId) ? item.EmailId : (!string.IsNullOrEmpty(item.CustomerName) ? item.CustomerName : "No Email"))
+                            </td>
+
+                            <td class="p-4 text-slate-600">
+                                @(string.IsNullOrEmpty(item.ModeOfPayment) ? "Card" : item.ModeOfPayment)
+                            </td>
+
+                            <td class="p-4 font-semibold text-emerald-600">$@item.TotalPrice.ToString("N2")</td>
+                            <td class="p-4 text-slate-600">@item.OrderDate.ToString("dd MMM yyyy")</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="p-4 text-center text-slate-500">No recent orders found.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DigitalPhotoPrintingSystem.Data;
@@ -13,109 +13,153 @@ namespace DigitalPhotoPrintingSystem.Controllers
     public class AdminController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _environment;
 
-        public AdminController(ApplicationDbContext context, IWebHostEnvironment environment)
+        public AdminController(ApplicationDbContext context)
         {
             _context = context;
-            _environment = environment;
         }
 
+        // Helper Method for Session Validation
+        private bool IsUserLoggedIn()
+        {
+            var custId = HttpContext.Session.GetString("CustId");
+            var userName = HttpContext.Session.GetString("UserName");
+            return !string.IsNullOrEmpty(custId) || !string.IsNullOrEmpty(userName);
+        }
+
+        // ==========================================
+        // 0. ADMIN DASHBOARD
+        // ==========================================
+        public async Task<IActionResult> Dashboard()
+        {
+            if (!IsUserLoggedIn())
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            try
+            {
+                ViewBag.TotalOrders = await _context.PhotoOrders.CountAsync();
+                ViewBag.TotalRevenue = await _context.PhotoOrders.SumAsync(o => (decimal?)o.TotalPrice) ?? 0m;
+                ViewBag.TotalCustomers = await _context.Customers.CountAsync();
+
+                var recentOrders = await _context.PhotoOrders
+                    .OrderByDescending(o => o.OrderDate)
+                    .ThenByDescending(o => o.Id)
+                    .Take(10)
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                return View(recentOrders);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Dashboard error: " + ex.Message;
+                return View(new System.Collections.Generic.List<PhotoOrder>());
+            }
+        }
+
+        // ==========================================
+        // 1. MANAGE ORDERS (FIXED DIRECT VIEW PATH)
+        // ==========================================
         public async Task<IActionResult> ManageOrders()
         {
+            if (!IsUserLoggedIn())
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
             try
             {
-                var orders = await _context.PurchaseOrders.ToListAsync();
-                return View(orders ?? new List<PurchaseOrder>());
+                var orders = await _context.PhotoOrders
+                    .OrderByDescending(o => o.OrderDate)
+                    .ThenByDescending(o => o.Id)
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                // Direct Exact View Path to prevent loading wrong view
+                return View("~/Views/Admin/ManageOrders.cshtml", orders);
             }
             catch (Exception ex)
             {
-                TempData["Error"] = "Database Error: " + ex.Message;
-                return View(new List<PurchaseOrder>());
+                TempData["Error"] = "Error loading orders: " + ex.Message;
+                return View("~/Views/Admin/ManageOrders.cshtml", new System.Collections.Generic.List<PhotoOrder>());
             }
         }
 
+        // POST: /Admin/DeleteOrder
         [HttpPost]
-        public async Task<IActionResult> CompleteAndCleanupFolder(int id)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteOrder(int id)
         {
-            try
+            var order = await _context.PhotoOrders.FindAsync(id);
+            if (order != null)
             {
-                var order = await _context.PurchaseOrders.FindAsync(id);
-                if (order != null)
+                string folderName = $"folder_{id:D4}";
+                string fullPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", folderName);
+
+                if (Directory.Exists(fullPath))
                 {
-                    if (!string.IsNullOrEmpty(order.FolderName))
+                    try
                     {
-                        string folderPath = Path.Combine(_environment.WebRootPath, "uploads", order.FolderName);
-                        if (Directory.Exists(folderPath))
-                        {
-                            Directory.Delete(folderPath, true);
-                        }
+                        Directory.Delete(fullPath, true);
                     }
-
-                    _context.PurchaseOrders.Remove(order);
-                    await _context.SaveChangesAsync();
-                    TempData["Success"] = $"Order #{id} completed and server photos deleted successfully!";
+                    catch { /* Ignore IO cleanup errors */ }
                 }
-            }
-            catch (Exception ex)
-            {
-                TempData["Error"] = "Error while processing order: " + ex.Message;
+
+                _context.PhotoOrders.Remove(order);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = $"Order #{id} deleted successfully!";
             }
 
-            return RedirectToAction("ManageOrders");
+            return RedirectToAction(nameof(ManageOrders));
         }
 
+        // ==========================================
+        // 2. MANAGE PRICES
+        // ==========================================
         public async Task<IActionResult> ManagePrices()
         {
-            try
+            if (!IsUserLoggedIn())
             {
-                var prices = await _context.PrintPrices.ToListAsync();
-                return View(prices ?? new List<PrintPrice>());
+                return RedirectToAction("Login", "Account");
             }
-            catch (Exception ex)
-            {
-                TempData["Error"] = "Error loading prices: " + ex.Message;
-                return View(new List<PrintPrice>());
-            }
+
+            var prices = await _context.PrintPrices.AsNoTracking().ToListAsync();
+            return View(prices);
         }
 
+        // POST: /Admin/AddPrice
         [HttpPost]
-        public async Task<IActionResult> AddPrice(PrintPrice model)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddPrice(PrintPrice printPrice)
         {
-            try
+            if (ModelState.IsValid)
             {
-                if (ModelState.IsValid)
-                {
-                    _context.PrintPrices.Add(model);
-                    await _context.SaveChangesAsync();
-                    TempData["Success"] = "New print size added successfully!";
-                }
+                _context.PrintPrices.Add(printPrice);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Print size and price added successfully!";
             }
-            catch (Exception ex)
+            else
             {
-                TempData["Error"] = "Error adding price: " + ex.Message;
+                TempData["Error"] = "Failed to add print size. Check inputs.";
             }
-            return RedirectToAction("ManagePrices");
+            return RedirectToAction(nameof(ManagePrices));
         }
 
+        // POST: /Admin/DeletePrice
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeletePrice(int id)
         {
-            try
+            var item = await _context.PrintPrices.FindAsync(id);
+            if (item != null)
             {
-                var price = await _context.PrintPrices.FindAsync(id);
-                if (price != null)
-                {
-                    _context.PrintPrices.Remove(price);
-                    await _context.SaveChangesAsync();
-                    TempData["Success"] = "Print size removed successfully!";
-                }
+                _context.PrintPrices.Remove(item);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Print price deleted successfully.";
             }
-            catch (Exception ex)
-            {
-                TempData["Error"] = "Error deleting price: " + ex.Message;
-            }
-            return RedirectToAction("ManagePrices");
+            return RedirectToAction(nameof(ManagePrices));
         }
     }
 }

@@ -20,7 +20,6 @@ namespace DigitalPhotoPrintingSystem.Models
 
         public string Address { get; set; } = string.Empty;
 
-        // In dono properties ki waja se Login / Registration ke 2 errors aa rahe hain:
         [Required(ErrorMessage = "Email is required")]
         [EmailAddress]
         [MaxLength(50)]

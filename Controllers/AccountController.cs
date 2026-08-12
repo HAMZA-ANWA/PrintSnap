@@ -23,23 +23,57 @@ namespace DigitalPhotoPrintingSystem.Controllers
         }
 
         [HttpPost]
-        public IActionResult Register(Customer customer)
+        public IActionResult Register(
+            string FirstName,
+            string LastName,
+            DateTime DateOfBirth,
+            string Gender,
+            string PhoneNumber,
+            string Address,
+            string Email,
+            string Password)
         {
-            if (ModelState.IsValid)
+            if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
             {
-                var existingCustomer = _context.Customers.FirstOrDefault(c => c.Email == customer.Email);
-                if (existingCustomer != null)
-                {
-                    ModelState.AddModelError("Email", "Email already exists!");
-                    return View(customer);
-                }
-
-                _context.Customers.Add(customer);
-                _context.SaveChanges();
-
-                return RedirectToAction("Login");
+                ModelState.AddModelError("", "Email and Password are required.");
+                return View();
             }
-            return View(customer);
+
+            string cleanEmail = Email.Trim().ToLower();
+
+            var existingCustomer = _context.Customers.FirstOrDefault(c => c.Email.ToLower() == cleanEmail);
+            if (existingCustomer != null)
+            {
+                ModelState.AddModelError("", "Email already exists! Please login.");
+                return View();
+            }
+
+            var customer = new Customer
+            {
+                F_Name = FirstName ?? "",
+                L_Name = LastName ?? "",
+                Dob = DateOfBirth,
+                Gender = Gender ?? "",
+                P_No = PhoneNumber ?? "",
+                Address = Address ?? "",
+                Email = cleanEmail,
+                Password = Password.Trim()
+            };
+
+            _context.Customers.Add(customer);
+            _context.SaveChanges();
+
+            // Set Sessions
+            string displayName = !string.IsNullOrWhiteSpace(customer.F_Name)
+                                 ? customer.F_Name.Trim()
+                                 : customer.Email.Split('@')[0];
+
+            HttpContext.Session.SetString("CustId", customer.CustId.ToString());
+            HttpContext.Session.SetString("UserName", displayName);
+            HttpContext.Session.SetString("CustomerEmail", customer.Email ?? "");
+
+            TempData["Success"] = "Account created successfully!";
+            return RedirectToAction("Index", "Home");
         }
 
         [HttpGet]
@@ -57,14 +91,22 @@ namespace DigitalPhotoPrintingSystem.Controllers
                 return View();
             }
 
-            var customer = _context.Customers.FirstOrDefault(c => c.Email == email && c.Password == password);
+            string cleanEmail = email.Trim().ToLower();
+            string cleanPassword = password.Trim();
+
+            var customer = _context.Customers.FirstOrDefault(c => c.Email.ToLower() == cleanEmail && c.Password == cleanPassword);
 
             if (customer != null)
             {
-                HttpContext.Session.SetString("CustId", customer.CustId.ToString());
-                HttpContext.Session.SetString("CustomerName", customer.F_Name);
+                string displayName = !string.IsNullOrWhiteSpace(customer.F_Name)
+                                     ? customer.F_Name.Trim()
+                                     : customer.Email.Split('@')[0];
 
-                return RedirectToAction("Create", "PhotoOrder");
+                HttpContext.Session.SetString("CustId", customer.CustId.ToString());
+                HttpContext.Session.SetString("UserName", displayName);
+                HttpContext.Session.SetString("CustomerEmail", customer.Email ?? "");
+
+                return RedirectToAction("Index", "Home");
             }
 
             ViewBag.Error = "Invalid Email or Password";
@@ -74,7 +116,7 @@ namespace DigitalPhotoPrintingSystem.Controllers
         public IActionResult Logout()
         {
             HttpContext.Session.Clear();
-            return RedirectToAction("Login");
+            return RedirectToAction("Login", "Account");
         }
     }
 }

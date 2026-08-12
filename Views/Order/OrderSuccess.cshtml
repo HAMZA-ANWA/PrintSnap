@@ -1,0 +1,91 @@
+﻿@model DigitalPhotoPrintingSystem.Models.OrderViewModel
+
+@{
+    ViewData["Title"] = "Order Confirmation";
+}
+
+<div class="max-w-4xl mx-auto px-4 py-12">
+    <div class="bg-emerald-950/60 border border-emerald-500/50 rounded-2xl p-6 text-center shadow-xl mb-6">
+        <div class="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl">
+            <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <h2 class="text-3xl font-extrabold text-emerald-400">Order Placed Successfully!</h2>
+        <p class="text-slate-300 text-sm mt-1">Thank you for your order. Here is your confirmation receipt.</p>
+    </div>
+
+    <div class="bg-slate-900 rounded-2xl shadow-2xl border border-slate-800 overflow-hidden">
+        <div class="bg-slate-800/80 border-b border-slate-700/60 p-6 flex justify-between items-center text-white">
+            <div>
+                <h3 class="text-xl font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-receipt text-indigo-400"></i> Order Receipt
+                </h3>
+                <p class="text-xs text-slate-400">
+                    Date: @(Model != null ? Model.CreatedDate.ToString("dd MMM yyyy, hh:mm tt") : DateTime.Now.ToString("dd MMM yyyy, hh:mm tt"))
+                </p>
+            </div>
+            <div>
+                <span class="bg-indigo-600/30 text-indigo-300 text-xs font-semibold px-3 py-1 rounded-full border border-indigo-500/40">
+                    Order ID: #@(Model != null ? Model.OrderId : 0)
+                </span>
+            </div>
+        </div>
+
+        <div class="p-8 space-y-6">
+            <div class="grid md:grid-cols-2 gap-6 bg-slate-950/50 p-5 rounded-xl border border-slate-800">
+                <div>
+                    <h4 class="text-xs uppercase font-bold text-slate-400 mb-2">Customer Details</h4>
+                    <p class="text-slate-200 text-sm"><strong class="text-slate-400">Email:</strong> @(Model?.CustomerEmail ?? "N/A")</p>
+                    <p class="text-slate-200 text-sm mt-1"><strong class="text-slate-400">Shipping Address:</strong> @(Model?.ShippingAddress ?? "N/A")</p>
+                </div>
+                <div>
+                    <h4 class="text-xs uppercase font-bold text-slate-400 mb-2">Payment Details</h4>
+                    <p class="text-slate-200 text-sm"><strong class="text-slate-400">Payment Mode:</strong> @(Model?.PaymentMode ?? "N/A")</p>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="text-sm font-semibold text-slate-300 mb-3">Order Details</h4>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-300">
+                        <thead class="bg-slate-800 text-slate-200 uppercase text-xs">
+                            <tr>
+                                <th class="p-3 rounded-l-lg">Print Size ID</th>
+                                <th class="p-3 text-center">Copies</th>
+                                <th class="p-3 text-right rounded-r-lg">Total Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800">
+                            <tr>
+                                <td class="p-3 font-medium text-slate-100">Size ID: @(Model != null ? Model.PrintSizeId : 0)</td>
+                                <td class="p-3 text-center">@(Model != null ? Model.Copies : 0)</td>
+                                <td class="p-3 text-right font-bold text-indigo-400">$@(Model != null ? Model.TotalCost.ToString("F2") : "0.00")</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-800 flex flex-col sm:flex-row gap-4 justify-end d-print-none">
+                <a href="/Order/Create" class="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-bold text-center transition">
+                    <i class="fa-solid fa-plus me-1"></i> Place New Order
+                </a>
+                <button onclick="window.print()" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold transition">
+                    <i class="fa-solid fa-print me-1"></i> Print Receipt
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @@media print {
+        .d-print-none, nav, footer {
+            display: none !important;
+        }
+
+        body {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+        }
+    }
+</style>

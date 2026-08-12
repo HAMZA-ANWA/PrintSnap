@@ -1,5 +1,54 @@
-﻿@{
+﻿@model IEnumerable<DigitalPhotoPrintingSystem.Models.PurchaseOrder>
+
+@{
     ViewData["Title"] = "Order History";
 }
 
-<h2>Order History</h2>
+<div class="max-w-6xl mx-auto px-4 py-10">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-900">My Order History</h2>
+            <p class="text-slate-500 text-sm">All your photo print orders in one place.</p>
+        </div>
+        <a href="/PhotoOrder/Create" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm shadow-md hover:opacity-90 transition">
+            <i class="fa-solid fa-plus"></i> New Order
+        </a>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <table class="w-full text-left border-collapse">
+            <thead class="bg-slate-900 text-white text-xs uppercase tracking-wider font-semibold">
+                <tr>
+                    <th class="p-4">Order ID</th>
+                    <th class="p-4">Payment Mode</th>
+                    <th class="p-4">Total Amount</th>
+                    <th class="p-4">Order Date</th>
+                    <th class="p-4 text-center">Status</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-sm">
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-4 font-bold text-indigo-600">#@item.Id</td>
+                            <td class="p-4 text-slate-600">@item.PaymentMode</td>
+                            <td class="p-4 font-semibold text-emerald-600">$@item.TotalAmount.ToString("N2")</td>
+                            <td class="p-4 text-slate-600">@item.OrderDate.ToString("dd MMM yyyy hh:mm tt")</td>
+                            <td class="p-4 text-center">
+                                <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-md text-xs font-semibold">Placed</span>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="p-8 text-center text-slate-400">No orders found. Place your first print order!</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

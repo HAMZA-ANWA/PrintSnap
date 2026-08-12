@@ -1,0 +1,175 @@
+﻿@model DigitalPhotoPrintingSystem.Models.OrderViewModel
+
+@{
+    ViewData["Title"] = "Create New Order";
+}
+
+<style>
+    .btn-glossy-shine {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        border-radius: 0.85rem;
+        box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+        transition: all 0.3s ease;
+    }
+
+        .btn-glossy-shine::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(60deg, transparent 30%, rgba(255, 255, 255, 0.5) 50%, transparent 70%);
+            transform: rotate(30deg) translateY(-100%);
+            transition: all 0.75s ease-in-out;
+        }
+
+        .btn-glossy-shine:hover::before {
+            transform: rotate(30deg) translateY(100%);
+        }
+
+        .btn-glossy-shine:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.6);
+        }
+</style>
+
+<div class="max-w-4xl mx-auto px-4 py-12">
+    <div class="bg-slate-900 rounded-2xl shadow-2xl border border-slate-800 overflow-hidden">
+
+        <!-- Header -->
+        <div class="bg-slate-800/80 border-b border-slate-700/60 text-white p-8">
+            <h2 class="text-2xl font-bold flex items-center gap-3">
+                <i class="fa-solid fa-cart-plus text-indigo-400"></i> Create Photo Print Order
+            </h2>
+            <p class="text-slate-400 text-sm mt-1">Provide order details, select size, and upload JPEG photos.</p>
+        </div>
+
+        <!-- Form (Connected to Order Controller) -->
+        <form asp-controller="Order" asp-action="Create" method="post" enctype="multipart/form-data" class="p-8 space-y-6">
+            @Html.AntiForgeryToken()
+
+            <!-- Backend Error Summary (Agar Form Reject hoga toh red box me reason likha aayega) -->
+            <div asp-validation-summary="All" class="text-red-400 bg-red-950/50 border border-red-500/50 p-4 rounded-xl text-sm font-medium"></div>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Customer Email -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Customer Email</label>
+                    <input asp-for="CustomerEmail" type="email" class="bg-slate-950 border border-slate-700 text-slate-100 placeholder-slate-500 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 w-full transition" placeholder="name@example.com" required />
+                    <span asp-validation-for="CustomerEmail" class="text-red-400 text-xs mt-1 block"></span>
+                </div>
+
+                <!-- Print Size Dropdown -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Print Size</label>
+                    <select id="printSizeSelect" asp-for="PrintSizeId" class="bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 w-full transition" required>
+                        <option value="" class="bg-slate-900 text-slate-300">-- Select Size --</option>
+                        <option value="1" data-price="10" class="bg-slate-900 text-slate-100">4x6 Inches ($10.00)</option>
+                        <option value="2" data-price="15" class="bg-slate-900 text-slate-100">5x7 Inches ($15.00)</option>
+                        <option value="3" data-price="25" class="bg-slate-900 text-slate-100">8x10 Inches ($25.00)</option>
+                        <option value="4" data-price="35" class="bg-slate-900 text-slate-100">A4 Size ($35.00)</option>
+                    </select>
+                    <span asp-validation-for="PrintSizeId" class="text-red-400 text-xs mt-1 block"></span>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Copies -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Number of Copies Per Photo</label>
+                    <input id="copiesInput" asp-for="Copies" type="number" min="1" value="1" class="bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 w-full transition" required />
+                    <span asp-validation-for="Copies" class="text-red-400 text-xs mt-1 block"></span>
+                </div>
+
+                <!-- Payment Option -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Payment Option</label>
+                    <select asp-for="PaymentMode" class="bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 w-full transition" required>
+                        <option value="Direct Payment in Branch" class="bg-slate-900 text-slate-100">Direct Payment in Branch</option>
+                        <option value="Credit Card" class="bg-slate-900 text-slate-100">Credit Card</option>
+                    </select>
+                    <span asp-validation-for="PaymentMode" class="text-red-400 text-xs mt-1 block"></span>
+                </div>
+            </div>
+
+            <!-- Credit Card -->
+            <div>
+                <label class="block text-sm font-semibold text-slate-300 mb-2">Credit Card Number (Optional if Branch)</label>
+                <input asp-for="CreditCardNumber" type="text" maxlength="20" class="bg-slate-950 border border-slate-700 text-slate-100 placeholder-slate-500 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 w-full transition" placeholder="XXXX-XXXX-XXXX-XXXX" />
+                <span asp-validation-for="CreditCardNumber" class="text-red-400 text-xs mt-1 block"></span>
+            </div>
+
+            <!-- Address -->
+            <div>
+                <label class="block text-sm font-semibold text-slate-300 mb-2">Shipping Address</label>
+                <textarea asp-for="ShippingAddress" rows="2" class="bg-slate-950 border border-slate-700 text-slate-100 placeholder-slate-500 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 w-full transition" placeholder="Full delivery address..." required></textarea>
+                <span asp-validation-for="ShippingAddress" class="text-red-400 text-xs mt-1 block"></span>
+            </div>
+
+            <!-- Upload Photos -->
+            <div>
+                <label class="block text-sm font-semibold text-slate-300 mb-2">Upload JPEG Photographs (Req RS1)</label>
+                <div class="border-2 border-dashed border-slate-700 bg-slate-950/60 hover:bg-slate-950 p-6 rounded-2xl text-center transition">
+                    <i class="fa-solid fa-cloud-arrow-up text-3xl text-indigo-400 mb-2"></i>
+                    <p class="text-sm font-medium text-slate-300">Choose JPEG files from your local folder</p>
+                    <input id="photoFilesInput" asp-for="Photos" type="file" multiple accept=".jpg,.jpeg,.png" class="mt-3 block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer" required />
+                    <span asp-validation-for="Photos" class="text-red-400 text-xs mt-1 block"></span>
+                </div>
+            </div>
+
+            <!-- Price Display Section -->
+            <div class="p-4 rounded-xl bg-indigo-950/40 border border-indigo-500/30 flex justify-between items-center">
+                <div>
+                    <span class="text-xs text-indigo-300 font-semibold uppercase tracking-wider block">Estimated Total Cost</span>
+                    <span id="priceBreakdown" class="text-xs text-slate-400">Select size and photos to calculate</span>
+                </div>
+                <div class="text-2xl font-extrabold text-indigo-400" id="totalAmountDisplay">$0.00</div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="pt-4 border-t border-slate-800">
+                <button type="submit" class="w-full btn-glossy-shine py-3.5 text-base font-bold text-white flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <span>Submit Order & Save Folder</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var sizeSelect = document.getElementById("printSizeSelect");
+        var copiesInput = document.getElementById("copiesInput");
+        var photoFilesInput = document.getElementById("photoFilesInput");
+        var totalDisplay = document.getElementById("totalAmountDisplay");
+        var breakdownDisplay = document.getElementById("priceBreakdown");
+
+        function calculateTotal() {
+            var selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+            var pricePerPrint = parseFloat(selectedOption.getAttribute("data-price")) || 0;
+            var copies = parseInt(copiesInput.value) || 1;
+            var photoCount = photoFilesInput.files.length || 1;
+
+            if (pricePerPrint > 0) {
+                var total = pricePerPrint * copies * photoCount;
+                totalDisplay.innerText = "$" + total.toFixed(2);
+                breakdownDisplay.innerText = photoCount + ' Photo(s) x ' + copies + ' Copy(ies) at $' + pricePerPrint + ' each';
+            } else {
+                totalDisplay.innerText = "$0.00";
+                breakdownDisplay.innerText = "Select size and photos to calculate";
+            }
+        }
+
+        if (sizeSelect) sizeSelect.addEventListener("change", calculateTotal);
+        if (copiesInput) copiesInput.addEventListener("input", calculateTotal);
+        if (photoFilesInput) photoFilesInput.addEventListener("change", calculateTotal);
+    });
+</script>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

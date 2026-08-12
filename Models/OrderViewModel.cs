@@ -1,33 +1,32 @@
 ﻿using Microsoft.AspNetCore.Http;
-using System.ComponentModel.DataAnnotations;
+using System;
+using System.Collections.Generic;
 
 namespace DigitalPhotoPrintingSystem.Models
 {
     public class OrderViewModel
     {
-        [Required(ErrorMessage = "Email address zaroori hai")]
-        [EmailAddress(ErrorMessage = "Sahi Email format enter karein")]
-        [MaxLength(25, ErrorMessage = "Email 25 characters se zyada nahi ho sakti")]
-        public string CustomerEmail { get; set; } = string.Empty;
+        public int OrderId { get; set; }
 
-        [Required(ErrorMessage = "Shipping Address zaroori hai")]
-        public string ShippingAddress { get; set; } = string.Empty;
+        public string CustomerEmail { get; set; }
 
-        [Required(ErrorMessage = "Payment Mode select karein")]
-        public string PaymentMode { get; set; } = string.Empty; // "CreditCard" ya "Branch"
+        public int PrintSizeId { get; set; }
+
+        public int Copies { get; set; } = 1;
+
+        public string PaymentMode { get; set; }
 
         public string? CreditCardNumber { get; set; }
 
-        [Required(ErrorMessage = "Print Size select karein")]
-        public int PrintSizeId { get; set; }
+        public string ShippingAddress { get; set; }
 
-        [Range(1, 100, ErrorMessage = "Kam se kam 1 copy required hai")]
-        public int Copies { get; set; } = 1;
-
-        public decimal TotalAmount { get; set; }
-
-        // User ki desktop se select ki hui JPEG files yahan aayengi
-        [Required(ErrorMessage = "Kam se kam ek photo upload karein")]
+        // Multiple Photo files ke liye (Form upload handle karne ke liye)
         public List<IFormFile>? Photos { get; set; }
+
+        // Calculated Total Cost
+        public decimal TotalCost { get; set; }
+
+        // Order Creation Date
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
     }
 }

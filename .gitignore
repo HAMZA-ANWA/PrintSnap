@@ -1,0 +1,23 @@
+## Build output
+bin/
+obj/
+
+## Visual Studio / IDE
+.vs/
+*.user
+*.suo
+*.userprefs
+
+## Runtime uploads (user-uploaded photo files)
+wwwroot/uploads/
+
+## Stray / misc
+-w
+
+## OS
+Thumbs.db
+.DS_Store
+
+## npm
+node_modules/
+package-lock.json

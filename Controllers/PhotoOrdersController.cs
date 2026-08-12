@@ -1,139 +1,116 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 using DigitalPhotoPrintingSystem.Data;
 using DigitalPhotoPrintingSystem.Models;
 
 namespace DigitalPhotoPrintingSystem.Controllers
 {
-    public class PhotoOrderController : Controller
+    public class PhotoOrdersController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _environment;
 
-        public PhotoOrderController(ApplicationDbContext context, IWebHostEnvironment environment)
+        public PhotoOrdersController(ApplicationDbContext context)
         {
             _context = context;
-            _environment = environment;
         }
 
-        // GET: PhotoOrder/Create
-        [HttpGet]
-        public async Task<IActionResult> Create()
+        public IActionResult Index()
         {
-            var printSizes = await _context.PrintPrices.ToListAsync();
-            ViewBag.PrintSizes = new SelectList(printSizes, "Id", "SizeName");
+            return RedirectToAction("ManageOrders", "Admin");
+        }
+
+        public IActionResult Create()
+        {
             return View();
         }
 
-        // POST: PhotoOrder/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(OrderViewModel model)
         {
             if (ModelState.IsValid)
             {
-                // Price calculation logic
-                var selectedSize = await _context.PrintPrices.FirstOrDefaultAsync(p => p.Id == model.PrintSizeId);
-                decimal pricePerCopy = selectedSize != null ? selectedSize.Price : 0;
-                int photoCount = model.Photos != null ? model.Photos.Count : 1;
-                decimal calculatedTotal = pricePerCopy * model.Copies * photoCount;
-
-                var order = new PurchaseOrder
+                try
                 {
-                    CustomerEmail = model.CustomerEmail,
-                    ShippingAddress = model.ShippingAddress,
-                    PaymentMode = model.PaymentMode,
-                    OrderDate = DateTime.Now,
-                    TotalAmount = calculatedTotal
-                };
+                    decimal unitPrice = 0;
+                    string sizeName = "";
 
-                if (model.PaymentMode == "CreditCard" && !string.IsNullOrEmpty(model.CreditCardNumber))
-                {
-                    order.EncryptedCreditCard = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(model.CreditCardNumber));
-                }
-
-                _context.PurchaseOrders.Add(order);
-                await _context.SaveChangesAsync();
-
-                // Create folder_xxxx directory
-                string folderName = $"folder_{order.Id:D4}";
-                string uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", folderName);
-
-                if (!Directory.Exists(uploadsFolder))
-                {
-                    Directory.CreateDirectory(uploadsFolder);
-                }
-
-                // Upload JPEG files
-                if (model.Photos != null)
-                {
-                    foreach (var file in model.Photos)
+                    switch (model.PrintSizeId)
                     {
-                        var ext = Path.GetExtension(file.FileName).ToLower();
-                        if (ext == ".jpg" || ext == ".jpeg")
+                        case 1: unitPrice = 10m; sizeName = "4x6"; break;
+                        case 2: unitPrice = 15m; sizeName = "5x7"; break;
+                        case 3: unitPrice = 25m; sizeName = "8x10"; break;
+                        case 4: unitPrice = 35m; sizeName = "A4"; break;
+                        default: unitPrice = 10m; sizeName = "Standard"; break;
+                    }
+
+                    int photoCount = (model.Photos != null && model.Photos.Count > 0) ? model.Photos.Count : 1;
+                    decimal totalPrice = unitPrice * model.Copies * photoCount;
+
+                    string customerEmail = !string.IsNullOrEmpty(model.CustomerEmail) ? model.CustomerEmail : "customer@example.com";
+                    string customerName = customerEmail.Contains("@") ? customerEmail.Split('@')[0] : "Customer";
+
+                    var photoOrder = new PhotoOrder
+                    {
+                        EmailId = customerEmail,
+                        CustomerName = customerName,
+                        ModeOfPayment = model.PaymentMode,
+                        ShippingAddress = model.ShippingAddress,
+                        EncryptedCreditCardNumber = model.CreditCardNumber ?? "",
+                        PrintSize = sizeName,
+                        Quantity = model.Copies,
+                        UnitPrice = unitPrice,
+                        TotalPrice = totalPrice,
+                        OrderDate = DateTime.Now,
+                        Status = "Pending"
+                    };
+
+                    _context.PhotoOrders.Add(photoOrder);
+                    await _context.SaveChangesAsync();
+
+                    if (model.Photos != null && model.Photos.Count > 0)
+                    {
+                        string folderName = $"folder_{photoOrder.Id:D4}";
+                        string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", folderName);
+
+                        if (!Directory.Exists(uploadsFolder))
                         {
-                            string filePath = Path.Combine(uploadsFolder, file.FileName);
-                            using (var stream = new FileStream(filePath, FileMode.Create))
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
+
+                        foreach (var photo in model.Photos)
+                        {
+                            if (photo.Length > 0)
                             {
-                                await file.CopyToAsync(stream);
+                                string filePath = Path.Combine(uploadsFolder, photo.FileName);
+                                using (var stream = new FileStream(filePath, FileMode.Create))
+                                {
+                                    await photo.CopyToAsync(stream);
+                                }
                             }
                         }
+
+                        photoOrder.FolderName = folderName;
+                        await _context.SaveChangesAsync();
                     }
+
+                    // Assign updated values for receipt rendering
+                    model.OrderId = photoOrder.Id;
+                    model.TotalCost = totalPrice;
+                    model.CreatedDate = photoOrder.OrderDate;
+
+                    return View("~/Views/PhotoOrders/Confirmation.cshtml", model);
                 }
-
-                order.FolderName = folderName;
-                await _context.SaveChangesAsync();
-
-                return RedirectToAction("OrderConfirmation", new { id = order.Id });
-            }
-
-            var sizes = await _context.PrintPrices.ToListAsync();
-            ViewBag.PrintSizes = new SelectList(sizes, "Id", "SizeName");
-            return View(model);
-        }
-
-        // GET: PhotoOrder/OrderConfirmation/1
-        public async Task<IActionResult> OrderConfirmation(int id)
-        {
-            var order = await _context.PurchaseOrders.FindAsync(id);
-            return View(order);
-        }
-
-        // GET: PhotoOrder/ManageOrders (Requirement #9)
-        public async Task<IActionResult> ManageOrders()
-        {
-            var orders = await _context.PurchaseOrders.ToListAsync();
-            return View(orders);
-        }
-
-        // POST: PhotoOrder/ExecuteOrder/1 (Requirement #10)
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ExecuteOrder(int id)
-        {
-            var order = await _context.PurchaseOrders.FindAsync(id);
-            if (order != null)
-            {
-                // Delete folder containing photographs from server
-                if (!string.IsNullOrEmpty(order.FolderName))
+                catch (Exception ex)
                 {
-                    string folderPath = Path.Combine(_environment.WebRootPath, "uploads", order.FolderName);
-                    if (Directory.Exists(folderPath))
-                    {
-                        Directory.Delete(folderPath, true);
-                    }
+                    ModelState.AddModelError("", "Error saving order: " + ex.Message);
                 }
-
-                _context.PurchaseOrders.Remove(order);
-                await _context.SaveChangesAsync();
             }
 
-            return RedirectToAction(nameof(ManageOrders));
+            return View(model);
         }
     }
 }

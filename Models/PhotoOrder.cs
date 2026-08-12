@@ -10,6 +10,7 @@ namespace DigitalPhotoPrintingSystem.Models
         [Key]
         public int Id { get; set; }
 
+        [NotMapped]
         public int OrderId
         {
             get => Id;
@@ -54,6 +55,6 @@ namespace DigitalPhotoPrintingSystem.Models
         public int? CustId { get; set; }
 
         [ForeignKey("CustId")]
-        public Customer Customer { get; set; }
+        public virtual Customer Customer { get; set; }
     }
 }

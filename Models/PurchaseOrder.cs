@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DigitalPhotoPrintingSystem.Models
 {
@@ -7,6 +8,11 @@ namespace DigitalPhotoPrintingSystem.Models
     {
         [Key]
         public int Id { get; set; }
+
+        public int? CustId { get; set; }
+
+        [ForeignKey("CustId")]
+        public Customer? Customer { get; set; }
 
         [Required]
         [EmailAddress]
